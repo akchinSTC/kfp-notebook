@@ -16,7 +16,8 @@
 #
 
 
-from kfp.dsl._container_op import BaseOp, ContainerOp
+from kfp.dsl._container_op import ContainerOp, UserContainer
+from kfp.dsl import VolumeOp
 
 
 """
@@ -76,7 +77,7 @@ class NotebookOp(ContainerOp):
                                         'kfp-notebook/master/etc/docker-scripts/bootstrapper.py'
 
         if 'image' not in kwargs:  # default image used if none specified
-            kwargs['image'] = 'tensorflow/tensorflow:1.12.3-py'
+            kwargs['image'] = 'tensorflow/tensorflow:1.15.2-py'
 
         if notebook is None:
             ValueError("You need to provide a notebook.")
@@ -88,9 +89,7 @@ class NotebookOp(ContainerOp):
             """
 
             kwargs['command'] = ['sh', '-c']
-            kwargs['arguments'] = ['mkdir -p ./%s && cd ./%s && '
-                                   'curl -H "Cache-Control: no-cache" -L %s --output bootstrapper.py && '
-                                   'python bootstrapper.py '
+            kwargs['arguments'] = ['python /mnt/bootstrapper.py '
                                    ' --endpoint %s '
                                    ' --bucket %s '
                                    ' --directory "%s" '
@@ -100,9 +99,6 @@ class NotebookOp(ContainerOp):
                                    ' --input "%s" '
                                    ' --output "%s" '
                                    ' --output-html "%s"' % (
-                                       self.container_work_dir,
-                                       self.container_work_dir,
-                                       self.bootstrap_script_url,
                                        self.cos_endpoint,
                                        self.cos_bucket,
                                        self.cos_directory,
@@ -114,6 +110,22 @@ class NotebookOp(ContainerOp):
                                        self.notebook_html
                                        )
                                    ]
+
+        # Create Volume mount for main container and add to init container
+
+        init_container_list = []
+        bootstrap_container = UserContainer(name='bootstrap',
+                                            image='ubuntu:16.04',
+                                            command=["sh", "-c"],
+                                            args=['cd /mnt && apt update && apt install -y curl && \
+                                                       curl -H "Cache-Control: no-cache"  -L ' +
+                                                    self.bootstrap_script_url +
+                                                    ' --output bootstrapper.py'
+                                                  ],
+                                            mirror_volume_mounts=True
+                                            )
+        init_container_list.append(bootstrap_container)
+        kwargs['init_containers'] = init_container_list
 
         super().__init__(**kwargs)
 
