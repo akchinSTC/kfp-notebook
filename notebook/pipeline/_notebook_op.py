@@ -115,13 +115,10 @@ class NotebookOp(ContainerOp):
 
         init_container_list = []
         bootstrap_container = UserContainer(name='bootstrap',
-                                            image='ubuntu:16.04',
+                                            image='alpine:3.9.6',
                                             command=["sh", "-c"],
-                                            args=['cd /mnt && apt update && apt install -y curl && \
-                                                       curl -H "Cache-Control: no-cache"  -L ' +
-                                                    self.bootstrap_script_url +
-                                                    ' --output bootstrapper.py'
-                                                  ],
+                                            args=['cd /mnt && apk add curl && curl -H "Cache-Control: no-cache"  -L ' +
+                                                   self.bootstrap_script_url + ' --output bootstrapper.py'],
                                             mirror_volume_mounts=True
                                             )
         init_container_list.append(bootstrap_container)
