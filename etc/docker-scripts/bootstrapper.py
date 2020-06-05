@@ -23,7 +23,7 @@ def import_with_auto_install(package, version):
         return __import__(package)
     except ImportError:
         print('Updating package {}'.format(package))
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '=='.join([package, version])])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '~='.join([package, version])])
 
 
 def parse_arguments():
