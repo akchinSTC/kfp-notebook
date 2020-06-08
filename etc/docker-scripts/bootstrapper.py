@@ -13,17 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import shutil
 import subprocess
 import sys
-
-
-def import_with_auto_install(package, version):
-    try:
-        return __import__(package)
-    except ImportError:
-        print('Updating package {}'.format(package))
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '~='.join([package, version])])
 
 
 def parse_arguments():
@@ -116,14 +107,6 @@ def put_file_to_object_storage(client, bucket_name, file_to_upload, object_name=
 
 
 if __name__ == '__main__':
-    import_with_auto_install("jupyter_client", "6.1.3")
-    import_with_auto_install("ipython", "7.13.0")
-    import_with_auto_install("papermill", "2.1.1")
-    import_with_auto_install("minio", "5.0.10")
-    import_with_auto_install("argparse", "1.4.0")
-    import_with_auto_install("nbconvert", "5.6.1")
-    import_with_auto_install("nbformat", "5.0.6")
-    import_with_auto_install("ipykernel", "5.2.1")
 
     import os
     import minio

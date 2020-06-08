@@ -36,6 +36,7 @@ class NotebookOp(ContainerOp):
                  cos_dependencies_archive: str,
                  pipeline_outputs: str,
                  pipeline_inputs: str,
+                 requirements_url: str = None,
                  bootstrap_script_url: str = None,
                  **kwargs):
         """Create a new instance of ContainerOp.
@@ -60,6 +61,7 @@ class NotebookOp(ContainerOp):
         self.cos_dependencies_archive = cos_dependencies_archive
         self.container_work_dir = "jupyter-work-dir"
         self.bootstrap_script_url = bootstrap_script_url
+        self.requirements_url = requirements_url
         self.pipeline_outputs = pipeline_outputs
         self.pipeline_inputs = pipeline_inputs
 
@@ -69,6 +71,13 @@ class NotebookOp(ContainerOp):
 
             self.bootstrap_script_url = 'https://raw.githubusercontent.com/akchinSTC/' \
                                         'kfp-notebook/boot-version/etc/docker-scripts/bootstrapper.py'
+
+        if self.requirements_url is None:
+            """ If bootstrap_script arg with URL not provided, use the one baked in here.
+            """
+
+            self.requirements_url = 'https://raw.githubusercontent.com/akchinSTC/' \
+                                    'kfp-notebook/boot-version/etc/requirements.txt'
 
         if 'image' not in kwargs:
             ValueError("You need to provide an image.")
@@ -85,6 +94,8 @@ class NotebookOp(ContainerOp):
             kwargs['command'] = ['sh', '-c']
             kwargs['arguments'] = ['mkdir -p ./%s && cd ./%s && '
                                    'curl -H "Cache-Control: no-cache" -L %s --output bootstrapper.py && '
+                                   'curl -H "Cache-Control: no-cache" -L %s --output requirements.txt && '
+                                   'python -m pip install -r requirements.txt --upgrade &&'
                                    'python bootstrapper.py '
                                    ' --cos-endpoint %s '
                                    ' --cos-bucket %s '
@@ -96,6 +107,7 @@ class NotebookOp(ContainerOp):
                                        self.container_work_dir,
                                        self.container_work_dir,
                                        self.bootstrap_script_url,
+                                       self.requirements_url,
                                        self.cos_endpoint,
                                        self.cos_bucket,
                                        self.cos_directory,
