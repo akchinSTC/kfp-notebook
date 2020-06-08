@@ -48,6 +48,8 @@ class NotebookOp(ContainerOp):
           cos_dependencies_archive: archive file name to get from object storage bucket e.g archive1.tar.gz
           pipeline_outputs: comma delimited list of files produced by the notebook
           pipeline_inputs: comma delimited list of files to be consumed/are required by the notebook
+          requirements_url: URL to a python requirements.txt file to be installed prior to running the notebook
+          bootstrap_script_url: URL to a custom python bootstrap script to run
           kwargs: additional key value pairs to pass e.g. name, image, sidecars & is_exit_handler.
                   See Kubeflow pipelines ContainerOp definition for more parameters or how to use
                   https://kubeflow-pipelines.readthedocs.io/en/latest/source/kfp.dsl.html#kfp.dsl.ContainerOp
@@ -66,16 +68,10 @@ class NotebookOp(ContainerOp):
         self.pipeline_inputs = pipeline_inputs
 
         if self.bootstrap_script_url is None:
-            """ If bootstrap_script arg with URL not provided, use the one baked in here.
-            """
-
             self.bootstrap_script_url = 'https://raw.githubusercontent.com/akchinSTC/' \
                                         'kfp-notebook/boot-version/etc/docker-scripts/bootstrapper.py'
 
         if self.requirements_url is None:
-            """ If bootstrap_script arg with URL not provided, use the one baked in here.
-            """
-
             self.requirements_url = 'https://raw.githubusercontent.com/akchinSTC/' \
                                     'kfp-notebook/boot-version/etc/requirements.txt'
 
