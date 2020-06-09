@@ -73,7 +73,7 @@ class NotebookOp(ContainerOp):
 
         if self.requirements_url is None:
             self.requirements_url = 'https://raw.githubusercontent.com/akchinSTC/' \
-                                    'kfp-notebook/boot-version/etc/requirements.txt'
+                                    'kfp-notebook/boot-version/etc/requirements-elyra.txt'
 
         if 'image' not in kwargs:
             ValueError("You need to provide an image.")
@@ -90,8 +90,9 @@ class NotebookOp(ContainerOp):
             kwargs['command'] = ['sh', '-c']
             kwargs['arguments'] = ['mkdir -p ./%s && cd ./%s && '
                                    'curl -H "Cache-Control: no-cache" -L %s --output bootstrapper.py && '
-                                   'curl -H "Cache-Control: no-cache" -L %s --output requirements.txt && '
-                                   'python -m pip install -r requirements.txt --upgrade &&'
+                                   'curl -H "Cache-Control: no-cache" -L %s --output requirements-elyra.txt && '
+                                   'python -m pip install packaging &&'
+                                   'python -m pip freeze > requirements-current.txt &&'
                                    'python bootstrapper.py '
                                    ' --cos-endpoint %s '
                                    ' --cos-bucket %s '

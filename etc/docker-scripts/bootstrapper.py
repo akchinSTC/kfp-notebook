@@ -15,7 +15,39 @@
 #
 import subprocess
 import sys
+from packaging import version
 
+
+def package_install():
+
+    elyra_package_list = package_list_to_dict("requirements-elyra.txt")
+    current_package_list = package_list_to_dict("requirements-current.txt")
+    to_install_list = []
+
+    for package, ver in elyra_package_list.items():
+        if package in current_package_list.keys():
+            if version.parse(ver) > version.parse(current_package_list[package]):
+                print("Updating %s package from version %s to %s" % (package, current_package_list[package], ver))
+                to_install_list.append(package+'=='+ver)
+            else:
+                print("Newer %s package with version %s already installed. Skipping..." %
+                      (package, current_package_list[package]))
+        else:
+            print("Installing %s package with version %s" % (package, ver))
+            to_install_list.append(package+'=='+ver)
+
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--no-deps'] + to_install_list)
+    subprocess.check_call([sys.executable, '-m', 'pip', 'freeze'])
+
+
+def package_list_to_dict(filename):
+    package_dict = {}
+    with open(filename) as fh:
+        for line in fh:
+            package_name, package_version = line.strip('\n').split(sep="==")
+            package_dict[package_name] = package_version
+
+    return package_dict
 
 def parse_arguments():
     print("Parsing Arguments.....")
@@ -107,6 +139,8 @@ def put_file_to_object_storage(client, bucket_name, file_to_upload, object_name=
 
 
 if __name__ == '__main__':
+
+    package_install()
 
     import os
     import minio
