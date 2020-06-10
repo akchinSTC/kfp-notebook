@@ -37,16 +37,16 @@ def package_install():
             to_install_list.append(package+'=='+ver)
 
     if to_install_list:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install',
-                               '--no-deps'] + to_install_list)
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + to_install_list)
 
 
 def package_list_to_dict(filename):
     package_dict = {}
     with open(filename) as fh:
         for line in fh:
-            package_name, package_version = line.strip('\n').split(sep="==")
-            package_dict[package_name] = package_version
+            if line[0] != '#':
+                package_name, package_version = line.strip('\n').split(sep="==")
+                package_dict[package_name] = package_version
 
     return package_dict
 
