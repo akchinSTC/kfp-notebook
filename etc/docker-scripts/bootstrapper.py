@@ -38,9 +38,9 @@ def package_install():
             print("Installing %s package with version %s..." % (package, ver))
             to_install_list.append(package+'=='+ver)
 
-        if to_install_list:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install',
-                                  '--no-deps'] + to_install_list)
+    if to_install_list:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install',
+                               '--no-deps'] + to_install_list)
 
 
 def package_list_to_dict(filename):
