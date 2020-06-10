@@ -25,19 +25,22 @@ def package_install():
     to_install_list = []
 
     for package, ver in elyra_package_list.items():
-        if package in current_package_list.keys():
+        if package in current_package_list:
             if version.parse(ver) > version.parse(current_package_list[package]):
-                print("Updating %s package from version %s to %s" % (package, current_package_list[package], ver))
+                print("Updating %s package from version %s to %s..." % (package, current_package_list[package], ver))
                 to_install_list.append(package+'=='+ver)
-            else:
+            elif version.parse(ver) < version.parse(current_package_list[package]):
                 print("Newer %s package with version %s already installed. Skipping..." %
                       (package, current_package_list[package]))
+            else:
+                pass  # Same package version
         else:
-            print("Installing %s package with version %s" % (package, ver))
+            print("Installing %s package with version %s..." % (package, ver))
             to_install_list.append(package+'=='+ver)
 
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--no-deps'] + to_install_list)
-    subprocess.check_call([sys.executable, '-m', 'pip', 'freeze'])
+        if to_install_list:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install',
+                                  '--no-deps'] + to_install_list)
 
 
 def package_list_to_dict(filename):
@@ -141,6 +144,7 @@ def put_file_to_object_storage(client, bucket_name, file_to_upload, object_name=
 if __name__ == '__main__':
 
     package_install()
+    subprocess.check_call([sys.executable, '-m', 'pip', 'freeze'])
 
     import os
     import minio
