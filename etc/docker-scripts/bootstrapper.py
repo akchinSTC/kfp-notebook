@@ -32,10 +32,8 @@ def package_install():
             elif version.parse(ver) < version.parse(current_package_list[package]):
                 print("Newer %s package with version %s already installed. Skipping..." %
                       (package, current_package_list[package]))
-            else:
-                pass  # Same package version
         else:
-            print("Installing %s package with version %s..." % (package, ver))
+            print("Package not found. Installing %s package with version %s..." % (package, ver))
             to_install_list.append(package+'=='+ver)
 
     if to_install_list:
