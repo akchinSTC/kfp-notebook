@@ -98,8 +98,8 @@ class NotebookOp(ContainerOp):
                                    ' --cos-bucket %s '
                                    ' --cos-directory "%s" '
                                    ' --cos-dependencies-archive "%s" '
-                                   ' --outputs %s '
-                                   ' --inputs %s '
+                                   ' --outputs "%s" '
+                                   ' --inputs "%s" '
                                    ' --notebook "%s" ' % (
                                        self.container_work_dir,
                                        self.container_work_dir,
