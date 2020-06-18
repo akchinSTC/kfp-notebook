@@ -119,7 +119,7 @@ class NotebookOp(ContainerOp):
                 argument_list.append(['--pipeline_outputs', self.pipeline_outputs])
 
             kwargs['command'] = ['sh', '-c']
-            kwargs['arguments'] = [argument_list]
+            kwargs['arguments'] = argument_list
 
         super().__init__(**kwargs)
 
