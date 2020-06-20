@@ -144,5 +144,5 @@ class NotebookOp(ContainerOp):
     def add_pipeline_outputs(self, pipeline_outputs):
         self.container.args[0] += ("--outputs " + pipeline_outputs)
 
-    def add_env_variable(self, name, value):
+    def add_environment_variable(self, name, value):
         self.container.add_env_variable(V1EnvVar(name=name, value=value))
