@@ -63,13 +63,20 @@ def package_list_to_dict(filename):
 def parse_arguments():
     print("Parsing Arguments.....")
     parser = argparse.ArgumentParser(description='Description of your program')
-    parser.add_argument('-e', '--cos-endpoint', dest="cos-endpoint", help='Cloud object storage endpoint', required=True)
-    parser.add_argument('-b', '--cos-bucket', dest="cos-bucket", help='Cloud object storage bucket to use', required=True)
-    parser.add_argument('-d', '--cos-directory', dest="cos-directory", help='Working directory in cloud object storage bucket to use', required=True)
-    parser.add_argument('-t', '--cos-dependencies-archive', dest="cos-dependencies-archive", help='Archive containing notebook and dependency artifacts', required=True)
-    parser.add_argument('-i', '--notebook', dest="notebook", help='Notebook to execute', required=True)
-    parser.add_argument('-p', '--outputs', dest="outputs", help='Files to output to object store', required=False)
-    parser.add_argument('-l', '--inputs', dest="inputs", help='Files to pull in from parent node', required=False)
+    parser.add_argument('-e', '--cos-endpoint', dest="cos-endpoint",
+                        help='Cloud object storage endpoint', required=True)
+    parser.add_argument('-b', '--cos-bucket', dest="cos-bucket",
+                        help='Cloud object storage bucket to use', required=True)
+    parser.add_argument('-d', '--cos-directory', dest="cos-directory",
+                        help='Working directory in cloud object storage bucket to use', required=True)
+    parser.add_argument('-t', '--cos-dependencies-archive', dest="cos-dependencies-archive",
+                        help='Archive containing notebook and dependency artifacts', required=True)
+    parser.add_argument('-i', '--notebook', dest="notebook",
+                        help='Notebook to execute', required=True)
+    parser.add_argument('-p', '--outputs', dest="outputs",
+                        help='Files to output to object store', required=False)
+    parser.add_argument('-l', '--inputs', dest="inputs",
+                        help='Files to pull in from parent node', required=False)
     args = vars(parser.parse_args())
 
     return args
