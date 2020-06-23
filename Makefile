@@ -60,7 +60,10 @@ lint: ## check style with flake8
 	flake8 kfp tests
 
 test: ## run tests quickly with the default Python
-	python setup.py test
+	pytest -v
+
+test-bootstrapper: ## run bootstrapper script tests again minio mock server - DOCKER REQUIRED
+	docker run -p 9000:9000 minio/minio server /data
 
 test-all: ## run tests on every Python version with tox
 	tox
