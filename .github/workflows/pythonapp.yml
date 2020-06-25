@@ -34,10 +34,10 @@ jobs:
     - name: Build
       run: |
         make install
-#    - name: Test with pytest
-#      run: |
-#        pip install pytest pytest-console-scripts
-#        make test
-#    - name: Collect logs
-#      if: failure()
-#      run: cat /tmp/jupyterlab-debug-*.log
+    - name: Test with pytest
+      run: |
+        pip install -r test-requirements.txt
+        make coverage
+    - name: Collect logs
+      if: failure()
+      run: cat /tmp/jupyterlab-debug-*.log
