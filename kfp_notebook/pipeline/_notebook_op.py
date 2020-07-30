@@ -19,8 +19,8 @@ import os
 
 from kfp.dsl._container_op import ContainerOp
 from kfp_notebook import __version__
-from kubernetes.client.models import V1EnvVar
 from typing import Dict, List, Optional
+from kubernetes.client.models import V1EnvVar
 
 """
 The NotebookOp uses a python script to bootstrap the user supplied image with the required dependencies.
@@ -134,6 +134,9 @@ class NotebookOp(ContainerOp):
 
             kwargs['command'] = ['sh', '-c']
             kwargs['arguments'] = "".join(argument_list)
+
+            # Openshift Support - CRI-o will not allow writing to base layer of image, so we have to attach an emptydir
+            # volume to each node so the notebook will have a place to write to.
 
         super().__init__(**kwargs)
 
