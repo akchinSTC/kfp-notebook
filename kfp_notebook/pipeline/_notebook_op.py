@@ -137,9 +137,6 @@ class NotebookOp(ContainerOp):
             kwargs['command'] = ['sh', '-c']
             kwargs['arguments'] = "".join(argument_list)
 
-            # Openshift Support - CRI-o will not allow writing to base layer of image, so we have to attach an emptydir
-            # volume to each node so the notebook will have a place to write to.
-
         super().__init__(**kwargs)
 
         # We must deal with the envs after the superclass initialization since these amend the
