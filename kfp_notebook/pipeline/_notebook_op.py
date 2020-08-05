@@ -80,7 +80,7 @@ class NotebookOp(ContainerOp):
         self.pipeline_envs = pipeline_envs
 
         argument_list = []
-        python_user_lib_path = '/mnt/python3.6/'
+        python_user_lib_path = self.container_work_dir + '/python3.6/'
 
         if not self.bootstrap_script_url:
             self.bootstrap_script_url = 'https://raw.githubusercontent.com/{org}/' \
@@ -107,7 +107,7 @@ class NotebookOp(ContainerOp):
             argument_list.append('mkdir -p ./{container_work_dir} && cd ./{container_work_dir} && '
                                  'curl -H "Cache-Control: no-cache" -L {bootscript_url} --output bootstrapper.py && '
                                  'curl -H "Cache-Control: no-cache" -L {reqs_url} --output requirements-elyra.txt && '
-                                 'python -m pip install --target={lib_path} packaging && '
+                                 'python -m pip install --target={python_user_lib_path} packaging && '
                                  'python -m pip freeze > requirements-current.txt && '
                                  'python bootstrapper.py '
                                  '--cos-endpoint {cos_endpoint} '
@@ -123,7 +123,7 @@ class NotebookOp(ContainerOp):
                                     cos_directory=self.cos_directory,
                                     cos_dependencies_archive=self.cos_dependencies_archive,
                                     notebook=self.notebook,
-                                    lib_path=python_user_lib_path
+                                    python_user_lib_path=python_user_lib_path
                                     )
                                  )
             if self.pipeline_inputs:

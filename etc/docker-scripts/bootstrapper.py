@@ -52,7 +52,7 @@ def package_install():
             to_install_list.append(package+'=='+ver)
 
     if to_install_list:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--target=/mnt/python3.6'] + to_install_list)
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--target=/mnt/jupyter-work-dir/python3.6'] + to_install_list)
 
 
 def package_list_to_dict(filename):
