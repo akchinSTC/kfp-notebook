@@ -20,7 +20,7 @@ import os
 from kfp.dsl._container_op import ContainerOp
 from kfp_notebook import __version__
 from typing import Dict, List, Optional
-from kubernetes.client.models import V1EnvVar
+from kubernetes.client.models import V1EnvVar, V1Volume, V1EmptyDirVolumeSource, V1VolumeMount
 
 """
 The NotebookOp uses a python script to bootstrap the user supplied image with the required dependencies.
@@ -49,6 +49,7 @@ class NotebookOp(ContainerOp):
                  pipeline_envs: Optional[Dict[str,str]] = None,
                  requirements_url: str = None,
                  bootstrap_script_url: str = None,
+                 crio_emptydir_volume_size: str = None,
                  **kwargs):
         """Create a new instance of ContainerOp.
         Args:
@@ -72,7 +73,7 @@ class NotebookOp(ContainerOp):
         self.cos_bucket = cos_bucket
         self.cos_directory = cos_directory
         self.cos_dependencies_archive = cos_dependencies_archive
-        self.container_work_dir = "/mnt/jupyter-work-dir"
+        self.container_work_dir = "jupyter-work-dir"
         self.bootstrap_script_url = bootstrap_script_url
         self.requirements_url = requirements_url
         self.pipeline_outputs = pipeline_outputs
@@ -81,9 +82,17 @@ class NotebookOp(ContainerOp):
 
         argument_list = []
 
-        python_user_lib_path = self.container_work_dir + '/python3.6/'
+        # CRI-o support for kfp pipelines
+        # We need to attach an emptydir volume for each notebook that runs since CRI-o runtime does not allow
+        # us to write to the base image layer file system, only to volumes.
+        self.crio_emptydir_volume_name = "workspace"
+        self.crio_emptydir_volume_size = crio_emptydir_volume_size
+        self.crio_python_user_lib_path = ''
 
-        # Temporarily hardcode for testing
+        if self.crio_emptydir_volume_size:
+            self.container_work_dir = "/mnt/" + self.container_work_dir
+            self.crio_python_user_lib_path = '--target=' + self.container_work_dir + '/python3.6/'
+
         KFP_NOTEBOOK_ORG = 'akchinstc'
         KFP_NOTEBOOK_BRANCH = 'odh-support'
 
@@ -112,14 +121,15 @@ class NotebookOp(ContainerOp):
             argument_list.append('mkdir -p {container_work_dir} && cd {container_work_dir} && '
                                  'curl -H "Cache-Control: no-cache" -L {bootscript_url} --output bootstrapper.py && '
                                  'curl -H "Cache-Control: no-cache" -L {reqs_url} --output requirements-elyra.txt && '
-                                 'python -m pip install --target={python_user_lib_path} packaging && '
+                                 'python -m pip install {crio_python_user_lib_path} packaging && '
                                  'python -m pip freeze > requirements-current.txt && '
                                  'python {container_work_dir}/bootstrapper.py '
                                  '--cos-endpoint {cos_endpoint} '
                                  '--cos-bucket {cos_bucket} '
                                  '--cos-directory "{cos_directory}" '
                                  '--cos-dependencies-archive "{cos_dependencies_archive}" '
-                                 '--notebook "{notebook}" '.format(
+                                 '--notebook "{notebook}" '
+                                 '--crio-python-user-lib-path "{crio_python_user_lib_path}" '.format(
                                     container_work_dir=self.container_work_dir,
                                     bootscript_url=self.bootstrap_script_url,
                                     reqs_url=self.requirements_url,
@@ -128,7 +138,7 @@ class NotebookOp(ContainerOp):
                                     cos_directory=self.cos_directory,
                                     cos_dependencies_archive=self.cos_dependencies_archive,
                                     notebook=self.notebook,
-                                    python_user_lib_path=python_user_lib_path
+                                    crio_python_user_lib_path=self.crio_python_user_lib_path,
                                     )
                                  )
             if self.pipeline_inputs:
@@ -149,6 +159,17 @@ class NotebookOp(ContainerOp):
         if self.pipeline_envs:
             for key,value in self.pipeline_envs.items():  # Convert dict entries to format kfp needs
                 self.container.add_env_variable(V1EnvVar(name=key, value=value))
+
+        # If crio volume size is found then assume kubeflow pipelines environment is using CRI-o as
+        # its container runtime
+        if self.crio_emptydir_volume_size:
+            self.add_volume(V1Volume(empty_dir=V1EmptyDirVolumeSource(
+                                     medium="",
+                                     size_limit=self.crio_emptydir_volume_size),
+                            name=self.crio_emptydir_volume_name))
+
+            self.container.add_volume_mount(V1VolumeMount(mount_path=self.container_work_dir,
+                                                          name=self.crio_emptydir_volume_name))
 
     def _get_file_name_with_extension(self, name, extension):
         """ Simple function to construct a string filename
