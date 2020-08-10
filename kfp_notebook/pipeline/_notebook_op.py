@@ -80,7 +80,12 @@ class NotebookOp(ContainerOp):
         self.pipeline_envs = pipeline_envs
 
         argument_list = []
+
         python_user_lib_path = self.container_work_dir + '/python3.6/'
+
+        # Temporarily hardcode for testing
+        KFP_NOTEBOOK_ORG = 'akchinstc'
+        KFP_NOTEBOOK_BRANCH = 'odh-support'
 
         if not self.bootstrap_script_url:
             self.bootstrap_script_url = 'https://raw.githubusercontent.com/{org}/' \
@@ -104,12 +109,12 @@ class NotebookOp(ContainerOp):
                 NOTE: Images being pulled must have python3 available on PATH and cURL utility
             """
 
-            argument_list.append('mkdir -p ./{container_work_dir} && cd ./{container_work_dir} && '
+            argument_list.append('mkdir -p {container_work_dir} && cd {container_work_dir} && '
                                  'curl -H "Cache-Control: no-cache" -L {bootscript_url} --output bootstrapper.py && '
                                  'curl -H "Cache-Control: no-cache" -L {reqs_url} --output requirements-elyra.txt && '
                                  'python -m pip install --target={python_user_lib_path} packaging && '
                                  'python -m pip freeze > requirements-current.txt && '
-                                 'python bootstrapper.py '
+                                 'python {container_work_dir}/bootstrapper.py '
                                  '--cos-endpoint {cos_endpoint} '
                                  '--cos-bucket {cos_bucket} '
                                  '--cos-directory "{cos_directory}" '
