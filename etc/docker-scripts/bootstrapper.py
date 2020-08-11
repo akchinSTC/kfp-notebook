@@ -53,7 +53,7 @@ def package_install():
 
     if to_install_list:
         if 'crio_python_user_lib_path' in input_params:
-            to_install_list.append(input_params['crio_python_user_lib_path'])
+            to_install_list.insert(0, '--target=' + input_params['crio_python_user_lib_path'])
         subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + to_install_list)
 
 

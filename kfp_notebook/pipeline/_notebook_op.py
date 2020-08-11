@@ -88,10 +88,12 @@ class NotebookOp(ContainerOp):
         self.crio_emptydir_volume_name = "workspace"
         self.crio_emptydir_volume_size = crio_emptydir_volume_size
         self.crio_python_user_lib_path = ''
+        self.crio_python_user_lib_path_target = ''
 
         if self.crio_emptydir_volume_size:
             self.container_work_dir = "/mnt/" + self.container_work_dir
-            self.crio_python_user_lib_path = '--target=' + self.container_work_dir + '/python3.6/'
+            self.crio_python_user_lib_path = self.container_work_dir + '/python3.6/'
+            self.crio_python_user_lib_path_target = '--target=' + self.crio_python_user_lib_path
 
         KFP_NOTEBOOK_ORG = 'akchinstc'
         KFP_NOTEBOOK_BRANCH = 'odh-support'
@@ -121,7 +123,7 @@ class NotebookOp(ContainerOp):
             argument_list.append('mkdir -p {container_work_dir} && cd {container_work_dir} && '
                                  'curl -H "Cache-Control: no-cache" -L {bootscript_url} --output bootstrapper.py && '
                                  'curl -H "Cache-Control: no-cache" -L {reqs_url} --output requirements-elyra.txt && '
-                                 'python -m pip install {crio_python_user_lib_path} packaging && '
+                                 'python -m pip install {crio_python_user_lib_path_target} packaging && '
                                  'python -m pip freeze > requirements-current.txt && '
                                  'python {container_work_dir}/bootstrapper.py '
                                  '--cos-endpoint {cos_endpoint} '
@@ -139,8 +141,10 @@ class NotebookOp(ContainerOp):
                                     cos_dependencies_archive=self.cos_dependencies_archive,
                                     notebook=self.notebook,
                                     crio_python_user_lib_path=self.crio_python_user_lib_path,
+                                    crio_python_user_lib_path_target=self.crio_python_user_lib_path_target,
                                     )
                                  )
+
             if self.pipeline_inputs:
                 inputs_str = self._artifact_list_to_str(self.pipeline_inputs)
                 argument_list.append('--inputs "{}" '.format(inputs_str))
