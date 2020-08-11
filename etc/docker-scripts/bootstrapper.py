@@ -189,7 +189,7 @@ def main():
     global input_params
     input_params = parse_arguments(sys.argv[1:])
 
-    package_install(input_params)
+    package_install()
     subprocess.check_call([sys.executable, '-m', 'pip', 'freeze'])
 
     import minio
