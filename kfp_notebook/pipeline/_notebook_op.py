@@ -130,8 +130,7 @@ class NotebookOp(ContainerOp):
                                  '--cos-bucket {cos_bucket} '
                                  '--cos-directory "{cos_directory}" '
                                  '--cos-dependencies-archive "{cos_dependencies_archive}" '
-                                 '--notebook "{notebook}" '
-                                 '--crio-python-user-lib-path "{crio_python_user_lib_path}" '.format(
+                                 '--notebook "{notebook}" '.format(
                                     container_work_dir=self.container_work_dir,
                                     bootscript_url=self.bootstrap_script_url,
                                     reqs_url=self.requirements_url,
@@ -140,7 +139,6 @@ class NotebookOp(ContainerOp):
                                     cos_directory=self.cos_directory,
                                     cos_dependencies_archive=self.cos_dependencies_archive,
                                     notebook=self.notebook,
-                                    crio_python_user_lib_path=self.crio_python_user_lib_path,
                                     crio_python_user_lib_path_target=self.crio_python_user_lib_path_target,
                                     )
                                  )
@@ -152,6 +150,9 @@ class NotebookOp(ContainerOp):
             if self.pipeline_outputs:
                 outputs_str = self._artifact_list_to_str(self.pipeline_outputs)
                 argument_list.append('--outputs "{}" '.format(outputs_str))
+
+            if self.crio_emptydir_volume_size:
+                argument_list.append(('--crio-python-user-lib-path "{}" '.format(self.crio_python_user_lib_path)))
 
             kwargs['command'] = ['sh', '-c']
             kwargs['arguments'] = "".join(argument_list)
@@ -174,6 +175,10 @@ class NotebookOp(ContainerOp):
 
             self.container.add_volume_mount(V1VolumeMount(mount_path=self.container_work_dir,
                                                           name=self.crio_emptydir_volume_name))
+
+            # Append to PYTHONPATH location of elyra dependencies in installed in Volume
+            self.container.add_env_variable(V1EnvVar(name='PYTHONPATH',
+                                                     value=self.crio_python_user_lib_path + ':$PYTHONPATH'))
 
     def _get_file_name_with_extension(self, name, extension):
         """ Simple function to construct a string filename
