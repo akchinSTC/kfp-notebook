@@ -189,11 +189,14 @@ class NotebookFileOp(FileOpBase):
         notebook_name = notebook.replace('.ipynb', '')
         notebook_output = notebook_name + '-output.ipynb'
         notebook_html = notebook_name + '.html'
+        kernel_name = "python3"
 
         try:
             OpUtil.log_operation_info(f"executing notebook using 'papermill {notebook} {notebook_output}'")
             t0 = time.time()
-            subprocess.run(['papermill', notebook, notebook_output], check=True)
+            # Really hate to do this but have to invoke Papermill via library as workaround
+            import papermill
+            papermill.execute_notebook(notebook, notebook_output, kernel_name=kernel_name)
             duration = time.time() - t0
             OpUtil.log_operation_info("notebook execution completed", duration)
 
@@ -268,8 +271,7 @@ class PythonFileOp(FileOpBase):
 class OpUtil(object):
     """Utility functions for preparing file execution."""
     @classmethod
-    def package_install(cls) -> None:
-
+    def package_install(cls, user_volume_path) -> None:
         OpUtil.log_operation_info("Installing packages")
         t0 = time.time()
         elyra_packages = cls.package_list_to_dict("requirements-elyra.txt")
@@ -296,9 +298,16 @@ class OpUtil(object):
                 to_install_list.append(package + '==' + ver)
 
         if to_install_list:
-            subprocess.run([sys.executable, '-m', 'pip', 'install'] + to_install_list)
+            if user_volume_path:
+                to_install_list.insert(0, '--target=' + user_volume_path)
+                to_install_list.append('--no-cache-dir')
 
-        subprocess.run([sys.executable, '-m', 'pip', 'freeze'])
+            subprocess.run(['python3', '-m', 'pip', 'install'] + to_install_list, check=True)
+
+        if user_volume_path:
+            os.environ["PIP_CONFIG_FILE"] = user_volume_path + "/pip.conf"
+
+        subprocess.run(['python3', '-m', 'pip', 'freeze'])
         duration = time.time() - t0
         OpUtil.log_operation_info("Packages installed", duration)
 
@@ -337,6 +346,8 @@ class OpUtil(object):
         parser.add_argument('-f', '--file', dest="filepath", help='File to execute', required=True)
         parser.add_argument('-o', '--outputs', dest="outputs", help='Files to output to object store', required=False)
         parser.add_argument('-i', '--inputs', dest="inputs", help='Files to pull in from parent node', required=False)
+        parser.add_argument('-p', '--user-volume-path', dest="user-volume-path",
+                            help='Directory in Volume to install python libraries into', required=False)
         parsed_args = vars(parser.parse_args(args))
 
         # cos-directory is the pipeline name, set as global

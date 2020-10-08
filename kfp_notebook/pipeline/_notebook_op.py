@@ -75,7 +75,7 @@ class NotebookOp(ContainerOp):
         self.cos_directory = cos_directory
         self.cos_dependencies_archive = cos_dependencies_archive
         self.container_work_dir_root_path = "./"
-        self.container_work_dir_name = "jupyter-work-dir"
+        self.container_work_dir_name = "jupyter-work-dir/"
         self.container_work_dir = self.container_work_dir_root_path + self.container_work_dir_name
         self.bootstrap_script_url = bootstrap_script_url
         self.requirements_url = requirements_url
@@ -85,9 +85,10 @@ class NotebookOp(ContainerOp):
 
         argument_list = []
 
-        # CRI-o support for kfp pipelines
-        # We need to attach an emptydir volume for each notebook that runs since CRI-o runtime does not allow
-        # us to write to the base image layer file system, only to volumes.
+        """ CRI-o support for kfp pipelines
+            We need to attach an emptydir volume for each notebook that runs since CRI-o runtime does not allow
+            us to write to the base image layer file system, only to volumes.
+        """
         self.emptydir_volume_name = "workspace"
         self.emptydir_volume_size = emptydir_volume_size
         self.python_user_lib_path = ''
@@ -96,8 +97,9 @@ class NotebookOp(ContainerOp):
 
         if self.emptydir_volume_size:
             self.container_work_dir_root_path = "/opt/app-root/src/"
+            self.container_python_dir_name = "python3/"
             self.container_work_dir = self.container_work_dir_root_path + self.container_work_dir_name
-            self.python_user_lib_path = self.container_work_dir + '/python3.6/'
+            self.python_user_lib_path = self.container_work_dir + self.container_python_dir_name
             self.python_user_lib_path_target = '--target=' + self.python_user_lib_path
             self.python_pip_config_url = 'https://raw.githubusercontent.com/{org}/' \
                                          'kfp-notebook/{branch}/etc/pip.conf'. \
@@ -134,9 +136,11 @@ class NotebookOp(ContainerOp):
                                  )
 
             if self.emptydir_volume_size:
-                argument_list.append('curl -H "Cache-Control: no-cache" -L {python_pip_config_url} '
-                                     '--output pip.conf && '
-                                     .format(python_pip_config_url=self.python_pip_config_url)
+                argument_list.append('mkdir {container_python_dir} && cd {container_python_dir} && '
+                                     'curl -H "Cache-Control: no-cache" -L {python_pip_config_url} '
+                                     '--output pip.conf && cd .. &&'
+                                     .format(python_pip_config_url=self.python_pip_config_url,
+                                             container_python_dir=self.container_python_dir_name)
                                      )
 
             argument_list.append('python3 -m pip install {python_user_lib_path_target} packaging && '
@@ -190,10 +194,7 @@ class NotebookOp(ContainerOp):
 
             # Append to PYTHONPATH location of elyra dependencies in installed in Volume
             self.container.add_env_variable(V1EnvVar(name='PYTHONPATH',
-                                                     value=self.python_user_lib_path + ':$PYTHONPATH'))
-
-            self.container.add_env_variable(V1EnvVar(name='PIP_CONFIG_FILE',
-                                                     value=self.container_work_dir + "/pip.conf"))
+                                                     value=self.python_user_lib_path))
 
     def _get_file_name_with_extension(self, name, extension):
         """
