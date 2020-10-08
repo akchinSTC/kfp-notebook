@@ -268,7 +268,7 @@ class PythonFileOp(FileOpBase):
 class OpUtil(object):
     """Utility functions for preparing file execution."""
     @classmethod
-    def package_install(cls, user_volume_path) -> None:
+    def package_install(cls) -> None:
 
         OpUtil.log_operation_info("Installing packages")
         t0 = time.time()
@@ -296,8 +296,6 @@ class OpUtil(object):
                 to_install_list.append(package + '==' + ver)
 
         if to_install_list:
-            if user_volume_path:
-                to_install_list.insert(0, '--target=' + user_volume_path)
             subprocess.run([sys.executable, '-m', 'pip', 'install'] + to_install_list)
 
         subprocess.run([sys.executable, '-m', 'pip', 'freeze'])
@@ -339,8 +337,6 @@ class OpUtil(object):
         parser.add_argument('-f', '--file', dest="filepath", help='File to execute', required=True)
         parser.add_argument('-o', '--outputs', dest="outputs", help='Files to output to object store', required=False)
         parser.add_argument('-i', '--inputs', dest="inputs", help='Files to pull in from parent node', required=False)
-        parser.add_argument('-p', '--user-volume-path', dest="user-volume-path",
-                            help='Directory in Volume to install python libraries into', required=False)
         parsed_args = vars(parser.parse_args(args))
 
         # cos-directory is the pipeline name, set as global

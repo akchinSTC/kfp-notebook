@@ -92,12 +92,16 @@ class NotebookOp(ContainerOp):
         self.emptydir_volume_size = emptydir_volume_size
         self.python_user_lib_path = ''
         self.python_user_lib_path_target = ''
+        self.python_pip_config_url = ''
 
         if self.emptydir_volume_size:
             self.container_work_dir_root_path = "/mnt/"
             self.container_work_dir = self.container_work_dir_root_path + self.container_work_dir_name
             self.python_user_lib_path = self.container_work_dir + '/python3.6/'
             self.python_user_lib_path_target = '--target=' + self.python_user_lib_path
+            self.python_pip_config_url = 'https://raw.githubusercontent.com/{org}/' \
+                                         'kfp-notebook/{branch}/etc/pip.conf'. \
+                format(org=KFP_NOTEBOOK_ORG, branch=KFP_NOTEBOOK_BRANCH)
 
         if not self.bootstrap_script_url:
             self.bootstrap_script_url = 'https://raw.githubusercontent.com/{org}/' \
@@ -124,7 +128,18 @@ class NotebookOp(ContainerOp):
             argument_list.append('mkdir -p {container_work_dir} && cd {container_work_dir} && '
                                  'curl -H "Cache-Control: no-cache" -L {bootscript_url} --output bootstrapper.py && '
                                  'curl -H "Cache-Control: no-cache" -L {reqs_url} --output requirements-elyra.txt && '
-                                 'python3 -m pip install {python_user_lib_path_target} packaging && '
+                                 .format(container_work_dir=self.container_work_dir,
+                                         bootscript_url=self.bootstrap_script_url,
+                                         reqs_url=self.requirements_url)
+                                 )
+
+            if self.emptydir_volume_size:
+                argument_list.append('curl -H "Cache-Control: no-cache" -L {python_pip_config_url} '
+                                     '--output pip.conf && '
+                                     .format(python_pip_config_url=self.python_pip_config_url)
+                                     )
+
+            argument_list.append('python3 -m pip install {python_user_lib_path_target} packaging && '
                                  'python3 -m pip freeze > requirements-current.txt && '
                                  'python3 bootstrapper.py '
                                  '--cos-endpoint {cos_endpoint} '
@@ -132,10 +147,7 @@ class NotebookOp(ContainerOp):
                                  '--cos-directory "{cos_directory}" '
                                  '--cos-dependencies-archive "{cos_dependencies_archive}" '
                                  '--file "{notebook}" '
-                                 .format(container_work_dir=self.container_work_dir,
-                                         bootscript_url=self.bootstrap_script_url,
-                                         reqs_url=self.requirements_url,
-                                         cos_endpoint=self.cos_endpoint,
+                                 .format(cos_endpoint=self.cos_endpoint,
                                          cos_bucket=self.cos_bucket,
                                          cos_directory=self.cos_directory,
                                          cos_dependencies_archive=self.cos_dependencies_archive,
@@ -179,6 +191,9 @@ class NotebookOp(ContainerOp):
             # Append to PYTHONPATH location of elyra dependencies in installed in Volume
             self.container.add_env_variable(V1EnvVar(name='PYTHONPATH',
                                                      value=self.python_user_lib_path + ':$PYTHONPATH'))
+
+            self.container.add_env_variable(V1EnvVar(name='PIP_CONFIG_FILE',
+                                                     value=self.container_work_dir + "/pip.conf"))
 
     def _get_file_name_with_extension(self, name, extension):
         """
