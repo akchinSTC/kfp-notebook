@@ -95,7 +95,7 @@ class NotebookOp(ContainerOp):
         self.python_pip_config_url = ''
 
         if self.emptydir_volume_size:
-            self.container_work_dir_root_path = "/mnt/"
+            self.container_work_dir_root_path = "/opt/app-root/src/"
             self.container_work_dir = self.container_work_dir_root_path + self.container_work_dir_name
             self.python_user_lib_path = self.container_work_dir + '/python3.6/'
             self.python_user_lib_path_target = '--target=' + self.python_user_lib_path
@@ -185,7 +185,7 @@ class NotebookOp(ContainerOp):
                                      size_limit=self.emptydir_volume_size),
                             name=self.emptydir_volume_name))
 
-            self.container.add_volume_mount(V1VolumeMount(mount_path=self.container_work_dir,
+            self.container.add_volume_mount(V1VolumeMount(mount_path=self.container_work_dir_root_path,
                                                           name=self.emptydir_volume_name))
 
             # Append to PYTHONPATH location of elyra dependencies in installed in Volume
