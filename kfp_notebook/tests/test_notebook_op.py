@@ -122,7 +122,7 @@ def test_fail_with_empty_string_as_notebook():
     assert "You need to provide a notebook." == str(error_info.value)
 
 
-def test_user_volume_size():
+def test_user_crio_volume_creation():
     notebook_op = NotebookOp(name="test",
                              notebook="test_notebook.ipynb",
                              cos_endpoint="http://testserver:32525",
@@ -133,6 +133,8 @@ def test_user_volume_size():
                              emptydir_volume_size='20Gi')
     assert notebook_op.emptydir_volume_size == '20Gi'
     assert notebook_op.container_work_dir_root_path == '/opt/app-root/src/'
+    assert notebook_op.container.volume_mounts.__len__() == 1
+    assert notebook_op.container.env.__len__() == 1
 
 
 @pytest.mark.skip(reason="not sure if we should even test this")
