@@ -302,12 +302,12 @@ class OpUtil(object):
                 to_install_list.insert(0, '--target=' + user_volume_path)
                 to_install_list.append('--no-cache-dir')
 
-            subprocess.run(['python3', '-m', 'pip', 'install'] + to_install_list, check=True)
+            subprocess.run([sys.executable, '-m', 'pip', 'install'] + to_install_list, check=True)
 
         if user_volume_path:
             os.environ["PIP_CONFIG_FILE"] = user_volume_path + "/pip.conf"
 
-        subprocess.run(['python3', '-m', 'pip', 'freeze'])
+        subprocess.run([sys.executable, '-m', 'pip', 'freeze'])
         duration = time.time() - t0
         OpUtil.log_operation_info("Packages installed", duration)
 
