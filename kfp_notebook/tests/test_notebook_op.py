@@ -132,7 +132,7 @@ def test_user_volume_size():
                              image="test/image:dev",
                              emptydir_volume_size='20Gi')
     assert notebook_op.emptydir_volume_size == '20Gi'
-    assert notebook_op.container_work_dir_root_path == '/mnt/'
+    assert notebook_op.container_work_dir_root_path == '/opt/app-root/src/'
 
 
 @pytest.mark.skip(reason="not sure if we should even test this")
